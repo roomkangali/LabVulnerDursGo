@@ -1,6 +1,0 @@
-# This rule is necessary for Apache servers to pass the Authorization header
-# to PHP scripts, which is required for Bearer Token authentication to work.
-
-RewriteEngine On
-RewriteCond %{HTTP:Authorization} .
-RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
