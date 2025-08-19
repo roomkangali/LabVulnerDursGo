@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}'s Profile - VulnShop{% endblock %}
+
+{% block content %}
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Profile Header -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-blue-600 to-blue-800">
+                <div class="flex items-center">
+                    <div class="relative">
+                        <div class="h-20 w-20 rounded-full bg-white flex items-center justify-center text-3xl font-bold text-blue-600 overflow-hidden">
+                            {% if user.profile_picture and user.profile_picture != 'default.png' %}
+                                <img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" 
+                                     alt="Profile" class="h-full w-full object-cover">
+                            {% else %}
+                                {{ user.username[0]|upper }}
+                            {% endif %}
+                        </div>
+                        <!-- Upload form -->
+                        <form action="{{ url_for('upload_profile_picture') }}" method="POST" enctype="multipart/form-data" class="mt-2">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <label class="cursor-pointer text-xs text-blue-600 hover:text-blue-800">
+                                Change photo
+                                <input type="file" name="file" class="hidden" id="fileInput" onchange="this.form.submit()">
+                            </label>
+                            <div id="fileInfo" class="text-xs text-gray-600 mt-1"></div>
+                        </form>
+                        <script>
+                            document.getElementById('fileInput').addEventListener('change', function(e) {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    document.getElementById('fileInfo').textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                                }
+                            });
+                        </script>
+                    </div>
+                    <div class="ml-6">
+                        <h3 class="text-2xl leading-6 font-bold text-white">
+                            {{ user.username }}
+                            {% if user.is_admin %}
+                                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Administrator
+                                </span>
+                            {% endif %}
+                        </h3>
+                        <p class="mt-1 max-w-2xl text-sm text-blue-100">
+                            Member since {{ user.created_at.strftime('%B %Y') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+                <dl class="sm:divide-y sm:divide-gray-200">
+                    <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Email address</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            {{ user.email }}
+                        </dd>
+                    </div>
+                    <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Member since</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            {{ user.created_at.strftime('%B %d, %Y') }}
+                        </dd>
+                    </div>
+                    <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Account status</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Active
+                            </span>
+                        </dd>
+                    </div>
+                    <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Preferences</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            <a href="{{ url_for('user_preferences') }}" class="text-blue-600 hover:text-blue-800">
+                                Update preferences
+                            </a>
+                            <br>
+                            <a href="/view?file=test.txt" class="text-blue-600 hover:text-blue-800">
+                                View System File (Test)
+                            </a>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="mt-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg leading-6 font-medium text-gray-900">Recent Orders</h2>
+                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">View all orders</a>
+            </div>
+            
+            {% if recent_orders %}
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                    <ul class="divide-y divide-gray-200">
+                        {% for order in recent_orders %}
+                            <li>
+                                <div class="px-4 py-4 sm:px-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                {% if order.product.image %}
+                                                    <img class="h-10 w-10 rounded-full object-cover" src="{{ url_for('static', filename='uploads/' + order.product.image) }}" alt="{{ order.product.name }}">
+                                                {% else %}
+                                                    <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                                                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="ml-4">
+                                                <p class="text-sm font-medium text-gray-900 truncate">
+                                                    {{ order.product.name }}
+                                                </p>
+                                                <p class="text-sm text-gray-500">
+                                                    ${{ "%.2f"|format(order.product.price) }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="ml-2 flex-shrink-0 flex">
+                                            <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                {% if order.status == 'completed' %}bg-green-100 text-green-800
+                                                {% elif order.status == 'processing' %}bg-blue-100 text-blue-800
+                                                {% elif order.status == 'cancelled' %}bg-red-100 text-red-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {{ order.status|title }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 sm:flex sm:justify-between">
+                                        <div class="sm:flex">
+                                            <p class="flex items-center text-sm text-gray-500">
+                                                <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                                                </svg>
+                                                {{ order.created_at.strftime('%B %d, %Y') }}
+                                            </p>
+                                        </div>
+                                        <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span data-time="{{ order.created_at.isoformat() }}">
+                                                {{ order.created_at|time_ago }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                <div class="text-center bg-white py-12 px-4 rounded-lg shadow">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No orders</h3>
+                    <p class="mt-1 text-sm text-gray-500">You haven't placed any orders yet.</p>
+                    <div class="mt-6">
+                        <a href="{{ url_for('index') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            Start Shopping
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Comments -->
+        <div class="mt-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg leading-6 font-medium text-gray-900">Recent Comments</h2>
+                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">View all comments</a>
+            </div>
+            
+            {% if recent_comments %}
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                    <ul class="divide-y divide-gray-200">
+                        {% for comment in recent_comments %}
+                            <li class="px-4 py-4 sm:px-6">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600" title="{{ comment.username }}">
+                                            {{ comment.username[0]|upper }}
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 flex-1 min-w-0">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-sm font-medium text-gray-900">
+                                                {{ comment.username }}
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                <span data-time="{{ comment.created_at.isoformat() }}">
+                                                    {{ comment.created_at|time_ago }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            {{ comment.content|truncate(200) }}
+                                        </p>
+                                        <div class="mt-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                                                    <circle cx="4" cy="4" r="3" />
+                                                </svg>
+                                                On {{ comment.product.name }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                <div class="text-center bg-white py-12 px-4 rounded-lg shadow">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No comments yet</h3>
+                    <p class="mt-1 text-sm text-gray-500">Your comments will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Format relative time (e.g., "2 days ago")
+    function formatRelativeTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        let interval = Math.floor(seconds / 31536000);
+        if (interval >= 1) return interval + ' year' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) return interval + ' month' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) return interval + ' day' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) return interval + ' hour' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) return interval + ' minute' + (interval === 1 ? '' : 's') + ' ago';
+        
+        return 'just now';
+    }
+    
+    // Apply relative time formatting to all elements with data-time attribute
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-time]').forEach(function(element) {
+            const time = element.getAttribute('data-time');
+            if (time) {
+                element.textContent = formatRelativeTime(time);
+            }
+        });
+    });
+</script>
+{% endblock %}
