@@ -59,7 +59,7 @@ This application is a PHP-based vulnerability lab and serves as the main dashboa
 
 2.  Run the following command to build and start the Docker container:
     ```bash
-    docker-compose up --build -d
+    docker compose up --build -d
     ```
     This command will run the application in the background.
 
@@ -69,7 +69,7 @@ This application is a PHP-based vulnerability lab and serves as the main dashboa
 ### How to Stop
 To stop the application, run the following command from within the `index-vuln` directory:
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ---
@@ -90,7 +90,7 @@ This application consists of two services: a Flask-based web application (Python
 
 2.  Run the following command to build and start both services:
     ```bash
-    docker-compose up --build -d
+    docker compose up --build -d
     ```
 
 3.  Once the containers are running, the services will be accessible at:
@@ -111,4 +111,4 @@ The database is initialized with the following users:
 ### How to Stop
 To stop both services, run the following command from within the `index-vuln-2` directory:
 ```bash
-docker-compose down
+docker compose down
