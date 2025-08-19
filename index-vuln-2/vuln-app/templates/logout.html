@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align: center; margin-top: 50px;">
+    <form method="POST">
+        <p>Are you sure you want to logout?</p>
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" style="background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+            Yes, Logout
+        </button>
+        <a href="{{ url_for('index') }}" style="margin-left: 10px; padding: 8px 16px; background: #e5e7eb; color: #1f2937; text-decoration: none; border-radius: 4px;">
+            Cancel
+        </a>
+    </form>
+</div>
+{% endblock %}

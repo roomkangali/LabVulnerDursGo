@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - VulnShop{% endblock %}
+
+{% block content %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="md:flex">
+            <!-- Product Image -->
+            <div class="md:w-1/2 bg-gray-200 p-8 flex items-center justify-center">
+                <span class="text-gray-400 text-lg">Product Image</span>
+            </div>
+            
+            <!-- Product Info -->
+            <div class="p-8 md:w-1/2">
+                <h1 class="text-3xl font-bold mb-2">{{ product.name }}</h1>
+                <div class="text-2xl font-bold text-blue-600 mb-6">${{ "%.2f"|format(product.price) }}</div>
+                
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold mb-2">Description</h2>
+                    <p class="text-gray-700">{{ product.description or 'No description available.' }}</p>
+                </div>
+                
+                <div class="flex items-center space-x-4 mb-6">
+                    <div class="flex items-center">
+                        <span class="text-yellow-400">★★★★★</span>
+                        <span class="ml-2 text-gray-600">(24 reviews)</span>
+                    </div>
+                    <span class="text-gray-400">|</span>
+                    <span class="text-green-600 font-medium">In Stock</span>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <input type="number" value="1" min="1" class="w-20 px-3 py-2 border rounded">
+                    <button class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors">
+                        Add to Cart
+                    </button>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t">
+                    <h3 class="font-semibold mb-2">Free Shipping</h3>
+                    <p class="text-sm text-gray-600">Free shipping on all orders over $50</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comments Section -->
+        <div class="border-t p-8">
+            <h2 class="text-2xl font-semibold mb-6">Customer Reviews</h2>
+            
+            <!-- Comment Form -->
+            <div class="mt-8">
+                <h3 class="text-lg font-medium text-gray-900">Write a review</h3>
+                <form method="POST" action="{{ url_for('add_comment', product_id=product.id) }}" class="mt-4 space-y-4">
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div>
+                        <label for="comment" class="block text-sm font-medium text-gray-700">Your review</label>
+                        <div class="mt-1">
+                            <textarea id="comment" name="content" rows="4" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" required></textarea>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                        <div class="flex items-center space-x-2">
+                            {% for i in range(1, 6) %}
+                            <div class="flex items-center">
+                                <input id="rating-{{ i }}" name="rating" type="radio" value="{{ i }}" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" {% if i == 5 %}checked{% endif %}>
+                                <label for="rating-{{ i }}" class="ml-2 text-sm text-gray-700">
+                                    {% for _ in range(i) %}★{% endfor %}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Submit review
+                        </button>
+                    </div>
+                </form>
+            
+            <!-- Comments List -->
+            <div class="mt-8">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Customer Reviews</h3>
+                
+                <div id="commentsList">
+                    {% if comments %}
+                        <div class="space-y-6">
+                            {% for comment in comments %}
+                            <div class="flex space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                                        {{ comment.user.avatar }}
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium text-gray-900">{{ comment.user.username }}</h4>
+                                            <div class="flex items-center mt-1">
+                                                {% for i in range(1, 6) %}
+                                                    {% if i <= comment.rating %}
+                                                        <span class="text-yellow-400">★</span>
+                                                    {% else %}
+                                                        <span class="text-gray-300">☆</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            <span title="{{ comment.created_at.strftime('%B %d, %Y at %H:%M') }}">
+                                                {{ comment.created_at|time_ago }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-700 mt-2">{{ comment.content|safe }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500">No reviews yet. Be the first to review!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- DOM XSS Vulnerability -->
+    <div class="mt-8 p-6 bg-red-50 border-l-4 border-red-500 rounded">
+        <h3 class="text-lg font-semibold text-red-800">DOM XSS Test</h3>
+        <p class="mt-2 text-red-700">
+            This section is intentionally vulnerable to DOM-based XSS for testing purposes.
+            Try entering: <code class="bg-red-100 px-2 py-1 rounded">&lt;img src=x onerror=alert('DOM XSS')&gt;</code>
+        </p>
+        <div class="mt-4">
+            <input type="text" id="domInput" placeholder="Enter something..." 
+                   class="w-full p-2 border rounded">
+            <button onclick="updateDom()" 
+                    class="mt-2 bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200">
+                Update DOM
+            </button>
+            <div id="domOutput" class="mt-2 p-2 border rounded min-h-10">
+                <!-- Vulnerable to DOM XSS -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Comment form submission
+        document.getElementById('commentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const comment = document.getElementById('comment').value;
+            const rating = document.querySelector('input[name="rating"]:checked')?.value || 5;
+            
+            try {
+                const response = await fetch(`/product/{{ product.id }}/comment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ 
+                        content: comment, 
+                        rating: parseInt(rating),
+                        _csrf: '{{ csrf_token() }}'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Reload the page to show the new comment
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message || 'Failed to post comment');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert(err.message || 'An error occurred while posting your comment');
+            }
+        });
+        
+        // DOM XSS Vulnerability (for demonstration only - should be removed in production)
+        function updateDom() {
+            const input = document.getElementById('domInput').value;
+            // Sanitize input to prevent XSS (in a real app, use a proper sanitization library)
+            const sanitized = input.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            document.getElementById('domOutput').innerHTML = 'You entered: ' + sanitized;
+        }
+    </script>
+{% endblock %}
